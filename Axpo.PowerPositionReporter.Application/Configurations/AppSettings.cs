@@ -10,7 +10,7 @@ namespace Axpo.PowerPositionReporter.Application.Configurations
         public const string SectionName = "PowerPositionReporter";
 
         [Required]
-        public string CsvReportPath { get; init; } = "./csvReport";
+        public string CsvReportPath { get; init; } = Path.Combine (AppContext.BaseDirectory, "csvReport");
 
         [Range (1, 1440)]
         public int IntervalMinutes { get; init; } = 60;

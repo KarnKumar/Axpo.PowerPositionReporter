@@ -5,7 +5,7 @@
     /// </summary>
     public class LoggingSettings
         {
-        public string LogDirectory { get; init; } = "./logs";
+        public string LogDirectory { get; init; } = Path.Combine (AppContext.BaseDirectory, "logs");
 
         public int RetainedFileDays { get; init; } = 30;
 

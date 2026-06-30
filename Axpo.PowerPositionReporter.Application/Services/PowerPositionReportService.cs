@@ -75,6 +75,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
             catch ( Exception ex )
                 {
                 logger.Error ($"[Power Trade Positions] Trade(s) Extraction FAILED │ reason={ex.Message}");
+                throw;
                 }
             }
 

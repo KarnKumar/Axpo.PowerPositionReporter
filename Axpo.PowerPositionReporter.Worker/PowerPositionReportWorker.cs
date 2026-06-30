@@ -10,7 +10,7 @@ namespace Axpo.PowerPositionReporter.Worker
     /// <param name="powerPositionService"></param>
     public class PowerPositionReportWorker ( IPowerPositionReportService powerPositionService ) : BackgroundService
         {
-        protected override Task ExecuteAsync ( CancellationToken stoppingToken = default )
+        protected override Task ExecuteAsync ( CancellationToken stoppingToken )
             {
 
             return powerPositionService.RunPowerTradePositionReporter (stoppingToken);
