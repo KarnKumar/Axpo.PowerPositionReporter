@@ -62,8 +62,20 @@ namespace Axpo.PowerPositionReporter.Application.Services
         /// <returns></returns>
         private async Task GenerateAndWriteReportAsync ( CancellationToken cancellationToken )
             {
-            var aggregatedPositions = await GetAggregateTradePositionsAsync(cancellationToken);
-            await csvReportWriter.WriteAsync (aggregatedPositions, cancellationToken);
+            try
+                {
+                var aggregatedPositions = await GetAggregateTradePositionsAsync(cancellationToken);
+                await csvReportWriter.WriteAsync (aggregatedPositions, cancellationToken);
+                }
+            catch ( OperationCanceledException )
+                {
+                logger.Info ("[Power Trade Positions] Trade(s) Extraction cancelled");
+                throw;
+                }
+            catch ( Exception ex )
+                {
+                logger.Error ($"[Power Trade Positions] Trade(s) Extraction FAILED │ reason={ex.Message}");
+                }
             }
 
         private void LogNextRun ( )
@@ -79,32 +91,12 @@ namespace Axpo.PowerPositionReporter.Application.Services
         /// <returns></returns>
         private async Task<Domain.Models.PowerTrade> GetAggregateTradePositionsAsync ( CancellationToken cancellationToken )
             {
-            var aggregatedPositions = new Domain.Models.PowerTrade
-                {
-                Date = DateTime.UtcNow,
-                AggregatedPositions = []
-                };
+            logger.Info ("[Power Position Reporter] Trade(s) Extraction started.");
 
-            try
-                {
-                logger.Info ("[Power Position Reporter] Trade(s) Extraction started.");
+            var dayAheadDate = DateTime.UtcNow.Date.AddDays(1);
+            var aggregatedPositions = await powerTradeService.GetAggregateTradePositionsAsync (dayAheadDate, cancellationToken);
 
-                // Day Ahead
-                var dayAheadDate = DateTime.UtcNow.Date.AddDays(1);
-
-                aggregatedPositions = await powerTradeService.GetAggregateTradePositionsAsync (dayAheadDate, cancellationToken);
-
-                logger.Info ("[Power Trade Positions] Trade(s) Extraction completed");
-                }
-            catch ( OperationCanceledException )
-                {
-                logger.Info ("[Power Trade Positions] Trade(s) Extraction cancelled");
-                throw;
-                }
-            catch ( Exception ex )
-                {
-                logger.Error ($"[Power Trade Positions] Trade(s) Extraction FAILED │ reason={ex.Message}");
-                }
+            logger.Info ("[Power Trade Positions] Trade(s) Extraction completed");
 
             return aggregatedPositions;
             }
