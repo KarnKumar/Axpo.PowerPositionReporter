@@ -1,6 +1,7 @@
 ﻿using Axpo.PowerPositionReporter.Application.Configurations;
 using Axpo.PowerPositionReporter.Application.Utilities;
 using Axpo.PowerPositionReporter.Domain.Interfaces;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Globalization;
@@ -62,7 +63,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 var fileSizeKb = new FileInfo(filePath).Length / 1024.0;
 
                 logger.LogInformation (
-                      "[CSV-WRITER] ✓ Written │ file={FileName} │ path={FilePath} │ rows={RowCount} │ size={FileSizeKb:F1}KB │ dayAhead={DayAhead:yyyy-MM-dd}",
+                      "[CSV-WRITER] report generated │ file={FileName} │ path={FilePath} │ rows={RowCount} │ size={FileSizeKb:F1}KB │ dayAhead={DayAhead:yyyy-MM-dd}",
                        fileName,Path.GetFullPath (filePath),result.AggregatedPositions.Count,fileSizeKb,result.Date);
 
                 return filePath;
@@ -70,7 +71,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
             catch ( IOException ex )
                 {
                 logger.LogError (ex,
-                    "[CSV-WRITER] ✗ Write FAILED │ file={FileName} │ reason=IO error │ details={ErrorMessage}",
+                    "[CSV-WRITER] report generation FAILED │ file={FileName} │ reason=IO error │ details={ErrorMessage}",
                     fileName, ex.Message);
                 throw;
                 }

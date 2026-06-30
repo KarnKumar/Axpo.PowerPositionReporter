@@ -1,4 +1,5 @@
 ﻿using Axpo.PowerPositionReporter.Domain.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace Axpo.PowerPositionReporter.Application.Services

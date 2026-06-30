@@ -1,4 +1,5 @@
 ﻿using Axpo.PowerPositionReporter.Domain.Interfaces;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -10,36 +11,36 @@ namespace Axpo.PowerPositionReporter.Application.Extensions
         {
         public const string PowerTradeRetryPipeline = "power-trade-retry";
 
-    public static IServiceCollection AddPowerTradeResilience (
-        this IServiceCollection services, IConfiguration configuration )
-        {
-        var maxRetries = configuration.GetValue<int>("PowerPositionReporter:MaxRetryAttempts");
+        private static readonly TimeSpan RetryBaseDelay = TimeSpan.FromSeconds(15);
 
-        services.AddResiliencePipeline<string, IEnumerable<PowerTrade>> (
-            PowerTradeRetryPipeline,
-            ( pipelineBuilder, context ) =>
+        public static IServiceCollection AddPowerTradeResilience (
+            this IServiceCollection services, IConfiguration configuration )
             {
-                var logger = context.ServiceProvider.GetRequiredService<IReportLogger>();
+            var maxRetries = configuration.GetValue<int>("PowerPositionReporter:MaxRetryAttempts");
 
-                pipelineBuilder.AddRetry (new RetryStrategyOptions<IEnumerable<PowerTrade>>
-                    {
-                    MaxRetryAttempts = maxRetries,
-                    Delay = TimeSpan.FromSeconds (15),
-                    BackoffType = DelayBackoffType.Exponential,
-                    ShouldHandle = new PredicateBuilder<IEnumerable<PowerTrade>> ()
-                        .Handle<Exception> (ex => ex is not OperationCanceledException),
-                    OnRetry = args =>
-                    {
-                        logger.Warning (
-                            $"[POWER-SVC] Retry attempt={args.AttemptNumber + 1} │ delay={args.RetryDelay} │ reason={args.Outcome.Exception?.Message ?? "unknown"}");
-                        return ValueTask.CompletedTask;
-                    }
-                    });
-            });
+            services.AddResiliencePipeline<string, IEnumerable<PowerTrade>> (
+                PowerTradeRetryPipeline,
+                ( pipelineBuilder, context ) =>
+                {
+                    var logger = context.ServiceProvider.GetRequiredService<IReportLogger>();
 
-        return services;
+                    pipelineBuilder.AddRetry (new RetryStrategyOptions<IEnumerable<PowerTrade>>
+                        {
+                        MaxRetryAttempts = maxRetries,
+                        Delay = RetryBaseDelay,
+                        BackoffType = DelayBackoffType.Exponential,
+                        ShouldHandle = new PredicateBuilder<IEnumerable<PowerTrade>> ()
+                            .Handle<Exception> (ex => ex is not OperationCanceledException),
+                        OnRetry = args =>
+                        {
+                            logger.Warning (
+                                $"[POWER-SVC] Retry attempt={args.AttemptNumber + 1} │ delay={args.RetryDelay} │ reason={args.Outcome.Exception?.Message ?? "unknown"}");
+                            return ValueTask.CompletedTask;
+                        }
+                        });
+                });
+
+            return services;
+            }
         }
     }
-
-    }
-

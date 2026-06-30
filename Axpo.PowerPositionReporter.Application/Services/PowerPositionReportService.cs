@@ -1,6 +1,6 @@
 ﻿using Axpo.PowerPositionReporter.Application.Configurations;
 using Axpo.PowerPositionReporter.Domain.Interfaces;
-using Axpo.PowerPositionReporter.Domain.Models;
+
 using Microsoft.Extensions.Options;
 
 namespace Axpo.PowerPositionReporter.Application.Services
@@ -72,7 +72,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
 
             try
                 {
-                logger.Info ("[PowerPositionReporter] Trade(s) Extraction started.");
+                logger.Info ("[Power Position Reporter] Trade(s) Extraction started.");
 
                 // Day Ahead
                 var dayAheadDate = DateTime.UtcNow.Date.AddDays(1);

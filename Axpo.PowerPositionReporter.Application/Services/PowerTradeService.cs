@@ -1,5 +1,6 @@
 ﻿using Axpo.PowerPositionReporter.Application.Extensions;
 using Axpo.PowerPositionReporter.Domain.Interfaces;
+
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Registry;
