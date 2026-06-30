@@ -6,6 +6,10 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 namespace Axpo.PowerPositionReporter.Application.Extensions
     {
+
+    /// <summary>
+    /// serilog configuration extensions for adding file logging to the logger configuration.
+    /// </summary>
     public static class SerilogConfigurationExtensions
         {
         public static LoggerConfiguration AddFileLogging (

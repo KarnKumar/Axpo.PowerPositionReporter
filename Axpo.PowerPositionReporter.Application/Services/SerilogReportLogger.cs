@@ -4,6 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Axpo.PowerPositionReporter.Application.Services
     {
+
+    /// <summary>
+    /// SerilogReportLogger is a logging service that implements the IReportLogger interface.
+    /// <param name="logger"></param>
     public sealed class SerilogReportLogger ( ILogger<SerilogReportLogger> logger ) : IReportLogger
         {
         private readonly ILogger<SerilogReportLogger> _logger = logger;

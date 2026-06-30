@@ -19,6 +19,12 @@ namespace Axpo.PowerPositionReporter.Application.Services
             pipelineProvider.GetPipeline<IEnumerable<PowerTrade>>(
                 ResilienceServiceExtensions.PowerTradeRetryPipeline);
 
+        /// <summary>
+        /// Gets the aggregated trade positions for a specific date.
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<Domain.Models.PowerTrade> GetAggregateTradePositionsAsync ( DateTime date, CancellationToken cancellationToken = default )
             {
             logger.LogDebug ("[POWER-SVC] GetTradesAsync │ date={Date:yyyy-MM-dd}", date);
@@ -59,6 +65,12 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 }
             }
 
+        /// <summary>
+        /// Aggregates the trade positions by period for a given date and collection of trades.
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="trades"></param>
+        /// <returns></returns>
         private Dictionary<int, double> AggregateTradePositions ( DateTime date, IEnumerable<PowerTrade> trades )
             {
             var aggregatedPositions = new Dictionary<int, double>();

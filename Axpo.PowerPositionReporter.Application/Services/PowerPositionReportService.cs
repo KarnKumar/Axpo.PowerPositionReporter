@@ -16,6 +16,11 @@ namespace Axpo.PowerPositionReporter.Application.Services
         {
         private readonly TimeSpan _interval = TimeSpan.FromMinutes(settings.Value.IntervalMinutes);
 
+        /// <summary>
+        /// Method to run the Power Position Reporter service, which generates and writes reports at a configured interval until cancellation is requested.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task RunPowerTradePositionReporter ( CancellationToken cancellationToken )
             {
             logger.Info ($"[Power Position Reporter] Started │ interval={_interval} minutes.");
@@ -50,6 +55,11 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 }
             }
 
+        /// <summary>
+        /// Generates and writes the report by retrieving aggregated trade positions and writing them to a CSV file.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task GenerateAndWriteReportAsync ( CancellationToken cancellationToken )
             {
             var aggregatedPositions = await GetAggregateTradePositionsAsync(cancellationToken);
@@ -62,6 +72,11 @@ namespace Axpo.PowerPositionReporter.Application.Services
             logger.Info ($"[Power Position Reporter]  Next run scheduled at {nextRunUtc:yyyy-MM-dd HH:mm} UTC");
             }
 
+        /// <summary>
+        /// Retrieves the aggregated trade positions for the next day from the power trade service.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task<Domain.Models.PowerTrade> GetAggregateTradePositionsAsync ( CancellationToken cancellationToken )
             {
             var aggregatedPositions = new Domain.Models.PowerTrade
