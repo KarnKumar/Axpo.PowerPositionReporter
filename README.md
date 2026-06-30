@@ -57,7 +57,7 @@ On a configurable interval — **immediate first run**, then every `IntervalMinu
 | 🧩 `Axpo.PowerPositionReporter.Domain` | Core models (`PowerTrade`) and interfaces (`IPowerTradeService`, `IReportWriter`, `IReportLogger`, `IPowerPositionReportService`) |
 | ⚙️ `Axpo.PowerPositionReporter.Application` | Implementations: trade aggregation, CSV writing, Serilog logging, Polly resilience, configuration |
 | 🏃 `Axpo.PowerPositionReporter.Worker` | Host entry point (`Program.cs`) and `BackgroundService` running the reporter loop |
-| ✅ `Axpo.PowerPositionReporter.UnitTests` | Unit tests for aggregation, CSV writing, and the report loop |
+| ✅ `Axpo.PowerPositionReporter.UnitTests` | Unit tests for aggregation, CSV writing, exception handling/wrapping, and the report loop |
 | 🧪 `Axpo.PowerPositionReporter.IntegrationTests` | Reqnroll (BDD) feature tests exercising the full pipeline |
 | 📦 `lib/PowerService.dll` | External Axpo trading-system assembly (`Axpo.IPowerService`) the app integrates with |
 
@@ -120,6 +120,21 @@ dotnet test Axpo.PowerPositionReporter.UnitTests
 # Integration / BDD tests (Reqnroll)
 dotnet test Axpo.PowerPositionReporter.IntegrationTests
 ```
+
+**Unit tests** (`Axpo.PowerPositionReporter.UnitTests`) cover the service layer in isolation, with mocked dependencies:
+
+- ✔️ `PowerTradeServiceTests` — volume aggregation across multiple trades, fractional-volume rounding, and that an unexpected failure from the upstream `IPowerService` is wrapped in a `PowerServiceUnavailableException` (with the original exception preserved as `InnerException`) once the Polly retry pipeline is exhausted, rather than the raw exception leaking out.
+- ✔️ `CsvReportWriterTests` — refuses to write when there are zero positions, writes rows ordered by period with correct UTC conversion, and that writing twice for the same minute overwrites cleanly with no leftover temp file.
+- ✔️ `PowerPositionReporterTests` — the first iteration runs immediately without waiting for the interval, the day-ahead date is requested correctly, and that a failed extraction is logged and does **not** write a report, without crashing the worker host.
+
+**Exception-handling design** (reflected in the tests above and worth knowing when extending them):
+
+| Failure | Where it's caught | What's thrown/logged |
+|---|---|---|
+| Upstream `PowerService` failure (after retries exhausted) | `PowerTradeService` | Logged at `Error`, wrapped and rethrown as `PowerServiceUnavailableException` |
+| CSV write failure (I/O, permissions, other) | `CsvReportWriter` | Logged at `Error`, wrapped and rethrown as `ReportWriteException` |
+| Cancellation (`OperationCanceledException`) | All layers | Logged at `Information`, rethrown as-is (never wrapped) |
+| A single scheduled report run failing (`PowerServiceUnavailableException` / `ReportWriteException` / anything else) | `PowerPositionReportService.GenerateAndWriteReportAsync` | Logged (`Warning` for expected/retryable failures, `Fatal` for unclassified ones); the loop continues to the next scheduled tick rather than crashing the worker. After 3 consecutive failed runs, an additional `Fatal` log is raised to flag a likely systemic problem rather than a transient blip |
 
 The integration suite covers:
 
