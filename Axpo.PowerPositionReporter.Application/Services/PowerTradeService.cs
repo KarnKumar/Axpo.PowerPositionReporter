@@ -1,4 +1,5 @@
 ﻿using Axpo.PowerPositionReporter.Application.Extensions;
+using Axpo.PowerPositionReporter.Domain.Exceptions;
 using Axpo.PowerPositionReporter.Domain.Interfaces;
 
 using Microsoft.Extensions.Logging;
@@ -57,12 +58,19 @@ namespace Axpo.PowerPositionReporter.Application.Services
                     AggregatedPositions = roundedPositions
                     };
                 }
+            catch ( OperationCanceledException )
+                {
+                logger.LogInformation (
+                    "[POWER-SVC] GetTradesAsync cancelled │ date={Date:yyyy-MM-dd}", date);
+                throw;
+                }
             catch ( Exception ex )
                 {
                 logger.LogError (ex,
                     "[POWER-SVC] GetTradesAsync FAILED │ date={Date:yyyy-MM-dd} │ type={ExceptionType} │ reason={ErrorMessage}",
                     date, ex.GetType ().Name, ex.Message);
-                throw;
+                throw new PowerServiceUnavailableException (
+                    $"Failed to retrieve trades for {date:yyyy-MM-dd} after resilience pipeline was exhausted.", ex);
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using Axpo.PowerPositionReporter.Application.Configurations;
 using Axpo.PowerPositionReporter.Application.Utilities;
+using Axpo.PowerPositionReporter.Domain.Exceptions;
 using Axpo.PowerPositionReporter.Domain.Interfaces;
 
 using Microsoft.Extensions.Logging;
@@ -64,23 +65,29 @@ namespace Axpo.PowerPositionReporter.Application.Services
 
                 logger.LogInformation (
                       "[CSV-WRITER] report generated │ file={FileName} │ path={FilePath} │ rows={RowCount} │ size={FileSizeKb:F1}KB │ dayAhead={DayAhead:yyyy-MM-dd}",
-                       fileName,Path.GetFullPath (filePath),result.AggregatedPositions.Count,fileSizeKb,result.Date);
+                       fileName, Path.GetFullPath (filePath), result.AggregatedPositions.Count, fileSizeKb, result.Date);
 
                 return filePath;
+                }
+            catch ( OperationCanceledException )
+                {
+                logger.LogInformation (
+                    "[CSV-WRITER] Write cancelled │ file={FileName}", fileName);
+                throw;
                 }
             catch ( IOException ex )
                 {
                 logger.LogError (ex,
                     "[CSV-WRITER] report generation FAILED │ file={FileName} │ reason=IO error │ details={ErrorMessage}",
                     fileName, ex.Message);
-                throw;
+                throw new ReportWriteException ($"Failed to write report '{fileName}' due to an I/O error.", ex);
                 }
             catch ( UnauthorizedAccessException ex )
                 {
                 logger.LogError (ex,
                     "[CSV-WRITER] ✗ Write FAILED │ file={FileName} │ reason=Insufficient permissions │ details={ErrorMessage}",
                     fileName, ex.Message);
-                throw;
+                throw new ReportWriteException ($"Failed to write report '{fileName}' due to insufficient permissions.", ex);
                 }
             catch ( Exception ex ) when ( ex is not OperationCanceledException )
                 {
@@ -88,7 +95,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
                     "[CSV-WRITER] ✗ Write FAILED │ file={FileName} │ dir={Directory} │ rows={RowCount} │ type={ExceptionType} │ reason={ErrorMessage}",
                     fileName, directory, result.AggregatedPositions.Count,
                     ex.GetType ().Name, ex.Message);
-                throw;
+                throw new ReportWriteException ($"Failed to write report '{fileName}'.", ex);
                 }
             finally
                 {

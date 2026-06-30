@@ -15,7 +15,21 @@
                 }
             catch ( TimeZoneNotFoundException )
                 {
-                return TimeZoneInfo.FindSystemTimeZoneById ("W. Europe Standard Time");
+                try
+                    {
+                    return TimeZoneInfo.FindSystemTimeZoneById ("W. Europe Standard Time");
+                    }
+                catch ( Exception ex ) when ( ex is TimeZoneNotFoundException or InvalidTimeZoneException )
+                    {
+                    throw new InvalidOperationException (
+                        "Unable to resolve the Berlin/W. Europe time zone on this host. " +
+                        "Verify the OS time zone database (tzdata) is installed and not corrupted.", ex);
+                    }
+                }
+            catch ( InvalidTimeZoneException ex )
+                {
+                throw new InvalidOperationException (
+                    "The 'Europe/Berlin' time zone data on this host is corrupted.", ex);
                 }
             }
 

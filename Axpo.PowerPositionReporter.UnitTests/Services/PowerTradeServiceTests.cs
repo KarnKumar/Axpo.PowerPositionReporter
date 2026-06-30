@@ -1,4 +1,5 @@
 ﻿using Axpo.PowerPositionReporter.Application.Services;
+using Axpo.PowerPositionReporter.Domain.Exceptions;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -60,18 +61,21 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
             }
 
         [Fact]
-        public async Task GetAggregateTradePositionsAsync_PowerServiceThrows_ExceptionPropagates ( )
+        public async Task GetAggregateTradePositionsAsync_PowerServiceThrows_WrapsInPowerServiceUnavailableException ( )
             {
             var date = new DateTime(2026, 1, 15);
             var powerServiceMock = new Mock<IPowerService>();
+            var downstreamException = new PowerServiceException("downstream failure");
             powerServiceMock
                 .Setup (p => p.GetTradesAsync (date))
-                .ThrowsAsync (new PowerServiceException ("downstream failure"));
+                .ThrowsAsync (downstreamException);
 
             var service = CreateService(powerServiceMock, out _);
 
-            await Assert.ThrowsAsync<PowerServiceException> (
+            var ex = await Assert.ThrowsAsync<PowerServiceUnavailableException> (
                 ( ) => service.GetAggregateTradePositionsAsync (date, CancellationToken.None));
+
+            Assert.Same (downstreamException, ex.InnerException);
             }
         }
 

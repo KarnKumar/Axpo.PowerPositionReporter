@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Serilog;
 
 using Axpo.PowerPositionReporter.Application.Configurations;
@@ -47,6 +46,7 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IReportWriter, CsvReportWriter>();
+
         services.AddHostedService<PowerPositionReportWorker>();
     })
     .UseConsoleLifetime(options =>
