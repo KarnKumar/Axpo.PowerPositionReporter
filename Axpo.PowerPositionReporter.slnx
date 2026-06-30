@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Axpo.PowerPositionReporter.Application/Axpo.PowerPositionReporter.Application.csproj" />
+    <Project Path="Axpo.PowerPositionReporter.Domain/Axpo.PowerPositionReporter.Domain.csproj" />
+    <Project Path="Axpo.PowerPositionReporter.Worker/Axpo.PowerPositionReporter.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
