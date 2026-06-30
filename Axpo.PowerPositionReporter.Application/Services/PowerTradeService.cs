@@ -47,13 +47,14 @@ namespace Axpo.PowerPositionReporter.Application.Services
                         };
                     }
 
-                // Aggregate the trade positions by period.
-                var positions = AggregateTradePositions(date, trades);
+                // Sum raw volumes per period, then round once on the final total (not per trade).
+                var rawPositions = SumTradePositions(date, trades);
+                var roundedPositions = rawPositions.ToDictionary (p => p.Key, p => Math.Round (p.Value, 0));
 
                 return new Domain.Models.PowerTrade
                     {
                     Date = date,
-                    AggregatedPositions = positions
+                    AggregatedPositions = roundedPositions
                     };
                 }
             catch ( Exception ex )
@@ -71,9 +72,9 @@ namespace Axpo.PowerPositionReporter.Application.Services
         /// <param name="date"></param>
         /// <param name="trades"></param>
         /// <returns></returns>
-        private Dictionary<int, double> AggregateTradePositions ( DateTime date, IEnumerable<PowerTrade> trades )
+        private Dictionary<int, double> SumTradePositions ( DateTime date, IEnumerable<PowerTrade> trades )
             {
-            var aggregatedPositions = new Dictionary<int, double>();
+            var rawPositions = new Dictionary<int, double>();
             var tradeCount = 0;
 
             foreach ( var trade in trades )
@@ -82,11 +83,9 @@ namespace Axpo.PowerPositionReporter.Application.Services
 
                 foreach ( var period in trade.Periods )
                     {
-                    var roundedVolume = Math.Round(period.Volume);
-
-                    aggregatedPositions[period.Period] = aggregatedPositions.TryGetValue (period.Period, out var existing)
-                        ? existing + roundedVolume
-                        : roundedVolume;
+                    rawPositions[period.Period] = rawPositions.TryGetValue (period.Period, out var existing)
+                        ? existing + period.Volume
+                        : period.Volume;
                     }
                 }
 
@@ -94,7 +93,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 "[POWER-SVC] GetTradesAsync │ date={Date:yyyy-MM-dd} │ tradeCount={TradeCount}",
                 date, tradeCount);
 
-            return aggregatedPositions;
+            return rawPositions;
             }
         }
     }

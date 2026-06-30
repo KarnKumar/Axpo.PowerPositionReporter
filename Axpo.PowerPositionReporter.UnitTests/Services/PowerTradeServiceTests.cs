@@ -56,7 +56,7 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
 
             var result = await service.GetAggregateTradePositionsAsync(date, CancellationToken.None);
 
-            Assert.Equal (12, result.AggregatedPositions[1]);
+            Assert.Equal (13, result.AggregatedPositions[1]);
             }
 
         [Fact]

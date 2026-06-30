@@ -1,5 +1,8 @@
 ﻿namespace Axpo.PowerPositionReporter.Application.Utilities
     {
+    /// <summary>
+    /// Period Time Converter class to convert trade date and period to UTC DateTime.
+    /// </summary>
     public static class PeriodTimeConverter
         {
         private static readonly TimeZoneInfo BerlinTimeZone = ResolveBerlinTimeZone();
@@ -8,23 +11,29 @@
             {
             try
                 {
-                // IANA id, works on Linux/macOS and modern Windows (ICU-enabled).
                 return TimeZoneInfo.FindSystemTimeZoneById ("Europe/Berlin");
                 }
             catch ( TimeZoneNotFoundException )
                 {
-                // Fallback for older Windows systems using Windows time zone ids.
                 return TimeZoneInfo.FindSystemTimeZoneById ("W. Europe Standard Time");
                 }
             }
 
+        /// <summary>
+        /// Converts the given trade date and period to a UTC DateTime.
+        /// </summary>
+        /// <param name="tradeDate"></param>
+        /// <param name="period"></param>
+        /// <returns></returns>
         public static DateTime ToUtc ( DateTime tradeDate, int period )
             {
-            var berlinLocalStart = new DateTime(tradeDate.Year, tradeDate.Month, tradeDate.Day, 0, 0, 0, DateTimeKind.Unspecified)
-                .AddHours(period - 1);
+            var localMidnight = DateTime.SpecifyKind(
+                new DateTime (tradeDate.Year, tradeDate.Month, tradeDate.Day),
+                DateTimeKind.Unspecified);
 
-            // ConvertTimeToUtc already returns a DateTime with Kind = Utc, so no extra SpecifyKind call is needed.
-            return TimeZoneInfo.ConvertTimeToUtc (berlinLocalStart, BerlinTimeZone);
+            var utcMidnight = TimeZoneInfo.ConvertTimeToUtc(localMidnight, BerlinTimeZone);
+
+            return utcMidnight.AddHours (period - 1);
             }
         }
     }
