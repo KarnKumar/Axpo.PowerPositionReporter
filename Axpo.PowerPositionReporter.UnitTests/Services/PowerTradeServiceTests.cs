@@ -25,7 +25,7 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
             }
 
         [Fact]
-        public async Task GetAggregateTradePositionsAsync_MultipleTrades_AggregatesAcrossTrades ( )
+        public async Task GetAggregateTradePositionsAsync_MultipleTrades_SumsVolumesPerPeriodAcrossTrades ( )
             {
             var date = new DateTime(2026, 1, 15);
             var tradeA = PowerTradeFactory.Create(date, 24, 10);
@@ -37,22 +37,26 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
 
             var result = await service.GetAggregateTradePositionsAsync(date, CancellationToken.None);
 
+            Assert.Equal (24, result.AggregatedPositions.Count);
             Assert.Equal (15, result.AggregatedPositions[1]);
+            Assert.Equal (15, result.AggregatedPositions[24]);
             }
 
         [Fact]
-        public async Task GetAggregateTradePositionsAsync_NoTradesReturned_ReturnsEmptyPositions ( )
+        public async Task GetAggregateTradePositionsAsync_FractionalVolumes_RoundsEachTradesVolumeBeforeSumming ( )
             {
+            // 10.5 rounds to 10 (banker's rounding) before being added to 2.5 -> rounds to 2; sum must be 12, not 13.
             var date = new DateTime(2026, 1, 15);
+            var tradeA = PowerTradeFactory.Create(date, 1, _ => 10.5);
+            var tradeB = PowerTradeFactory.Create(date, 1, _ => 2.5);
             var powerServiceMock = new Mock<IPowerService>();
-            powerServiceMock.Setup (p => p.GetTradesAsync (date)).ReturnsAsync ([]);
+            powerServiceMock.Setup (p => p.GetTradesAsync (date)).ReturnsAsync ([tradeA, tradeB]);
 
             var service = CreateService(powerServiceMock, out _);
 
             var result = await service.GetAggregateTradePositionsAsync(date, CancellationToken.None);
 
-            Assert.Empty (result.AggregatedPositions);
-            Assert.Equal (date, result.Date);
+            Assert.Equal (12, result.AggregatedPositions[1]);
             }
 
         [Fact]

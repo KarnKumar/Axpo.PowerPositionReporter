@@ -4,7 +4,7 @@ using Reqnroll;
 using Xunit;
 using DomainPowerTrade = Axpo.PowerPositionReporter.Domain.Models.PowerTrade;
 
-namespace Axpo.PowerPositionReporter.BddTests.Steps
+namespace Axpo.PowerPositionReporter.IntegrationTests.Steps
     {
     [Binding]
     public class PowerPositionReportingSteps
@@ -81,6 +81,7 @@ namespace Axpo.PowerPositionReporter.BddTests.Steps
             {
             Assert.True (File.Exists (_filePath));
             var lines = await File.ReadAllLinesAsync(_filePath);
+            Assert.Equal ("Datetime;Volume", lines[0]);
             Assert.Equal (expectedRows + 1, lines.Length); // +1 for header
             }
 

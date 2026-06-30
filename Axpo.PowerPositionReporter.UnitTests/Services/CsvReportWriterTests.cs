@@ -22,43 +22,51 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
             }
 
         [Fact]
-        public async Task WriteAsync_ZeroPositions_ThrowsInvalidOperationException ( )
+        public async Task WriteAsync_ZeroPositions_ThrowsInvalidOperationExceptionAndWritesNoFile ( )
             {
             var result = new DomainPowerTrade { Date = DateTime.UtcNow, AggregatedPositions = [] };
 
             await Assert.ThrowsAsync<InvalidOperationException> (
                 ( ) => _writer.WriteAsync (result, CancellationToken.None));
+
+            Assert.False (Directory.Exists (_tempDirectory) && Directory.EnumerateFiles (_tempDirectory).Any ());
             }
 
         [Fact]
-        public async Task WriteAsync_ValidPositions_CreatesFileAtReturnedPath ( )
+        public async Task WriteAsync_ValidPositions_WritesHeaderAndRowsOrderedByPeriodWithCorrectUtcAndVolume ( )
             {
             var result = new DomainPowerTrade
                 {
                 Date = new DateTime(2026, 1, 15),
-                AggregatedPositions = new Dictionary<int, double> { [1] = 100, [2] = 150 }
-                };
-
-            var filePath = await _writer.WriteAsync(result, CancellationToken.None);
-
-            Assert.True (File.Exists (filePath));
-            }
-
-        [Fact]
-        public async Task WriteAsync_ValidPositions_WritesExpectedRowsOrderedByPeriod ( )
-            {
-            var result = new DomainPowerTrade
-                {
-                Date = new DateTime(2026, 1, 15),
-                AggregatedPositions = new Dictionary<int, double> { [2] = 150, [1] = 100 }
+                AggregatedPositions = new Dictionary<int, double> { [2] = 150.5, [1] = 100 }
                 };
 
             var filePath = await _writer.WriteAsync(result, CancellationToken.None);
             var lines = await File.ReadAllLinesAsync (filePath, TestContext.Current.CancellationToken);
 
+            Assert.True (File.Exists (filePath));
             Assert.Equal (3, lines.Length); // header + 2 rows
-            Assert.Contains ("2026-01-14T23:00:00Z", lines[1]); // period 1 written before period 2
-            Assert.Contains ("100", lines[1]);
+            Assert.Equal ("Datetime;Volume", lines[0]);
+            Assert.Equal ("2026-01-14T23:00:00Z;100", lines[1]); // period 1 written before period 2
+            Assert.Equal ("2026-01-15T00:00:00Z;150.5", lines[2]);
+            }
+
+        [Fact]
+        public async Task WriteAsync_CalledTwiceForSameMinute_OverwritesRatherThanFailing ( )
+            {
+            var result = new DomainPowerTrade
+                {
+                Date = new DateTime(2026, 1, 15),
+                AggregatedPositions = new Dictionary<int, double> { [1] = 100 }
+                };
+
+            var firstPath = await _writer.WriteAsync(result, CancellationToken.None);
+            var secondPath = await _writer.WriteAsync(result, CancellationToken.None);
+
+            // Same minute => same target file name; the second write must succeed and overwrite, not throw.
+            Assert.Equal (firstPath, secondPath);
+            Assert.True (File.Exists (secondPath));
+            Assert.Empty (Directory.GetFiles (_tempDirectory, "*.tmp")); // no leftover temp file
             }
 
         public void Dispose ( )

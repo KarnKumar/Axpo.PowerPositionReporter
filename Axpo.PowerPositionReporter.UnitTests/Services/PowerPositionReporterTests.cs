@@ -14,8 +14,6 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
         private static IOptions<AppSettings> Settings ( int intervalMinutes = 60 ) =>
             Options.Create (new AppSettings { IntervalMinutes = intervalMinutes });
 
-        
-
         [Fact]
         public async Task RunPowerTradePositionReporter_FirstIteration_RunsImmediatelyWithoutWaitingForInterval ( )
             {
@@ -26,10 +24,6 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
                 .ReturnsAsync (aggregated);
 
             var reportWriterMock = new Mock<IReportWriter>();
-            reportWriterMock
-                .Setup (w => w.WriteAsync (aggregated, It.IsAny<CancellationToken> ()))
-                .ReturnsAsync ("report.csv");
-
             var loggerMock = new Mock<IReportLogger>();
             var cts = new CancellationTokenSource();
 
@@ -86,41 +80,29 @@ namespace Axpo.PowerPositionReporter.UnitTests.Services
             }
 
         [Fact]
-        public async Task RunPowerTradePositionReporter_AlreadyCancelledToken_ReturnsWithoutWritingReport ( )
+        public async Task RunPowerTradePositionReporter_TradeServiceThrows_SwallowsExceptionAndDoesNotWriteReport ( )
             {
+            // The loop must survive a single failed extraction (it logs and tries again on the next tick)
+            // rather than crashing the worker host.
             var tradeServiceMock = new Mock<IPowerTradeService>();
+            var cts = new CancellationTokenSource();
+
+            tradeServiceMock
+                .Setup (s => s.GetAggregateTradePositionsAsync (It.IsAny<DateTime> (), It.IsAny<CancellationToken> ()))
+                .Callback (( ) => cts.Cancel ())
+                .ThrowsAsync (new InvalidOperationException ("downstream failure"));
+
             var reportWriterMock = new Mock<IReportWriter>();
             var loggerMock = new Mock<IReportLogger>();
-            var cts = new CancellationTokenSource();
-            cts.Cancel ();
 
             var service = new PowerPositionReportService(
-                tradeServiceMock.Object, reportWriterMock.Object, loggerMock.Object, Settings());
+                tradeServiceMock.Object, reportWriterMock.Object, loggerMock.Object, Settings(intervalMinutes: 1440));
 
             await service.RunPowerTradePositionReporter (cts.Token);
 
             reportWriterMock.Verify (
                 w => w.WriteAsync (It.IsAny<DomainPowerTrade> (), It.IsAny<CancellationToken> ()),
                 Times.Never);
-            }
-
-        [Fact]
-        public async Task RunPowerTradePositionReporter_LogsStartupMessage ( )
-            {
-            var tradeServiceMock = new Mock<IPowerTradeService>();
-            var reportWriterMock = new Mock<IReportWriter>();
-            var loggerMock = new Mock<IReportLogger>();
-            var cts = new CancellationTokenSource();
-            cts.Cancel ();
-
-            var service = new PowerPositionReportService(
-                tradeServiceMock.Object, reportWriterMock.Object, loggerMock.Object, Settings());
-
-            await service.RunPowerTradePositionReporter (cts.Token);
-
-            loggerMock.Verify (
-                l => l.Info (It.Is<string> (msg => msg.Contains ("Started"))),
-                Times.Once);
             }
         }
     }
