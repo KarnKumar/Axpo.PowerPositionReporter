@@ -28,8 +28,22 @@ namespace Axpo.PowerPositionReporter.Application.Services
 
             while ( !cancellationToken.IsCancellationRequested )
                 {
+
                 // As per requirement, the first run should be immediate, and subsequent runs should be based on the configured interval.
-                await GenerateAndWriteReportAsync (cancellationToken);
+                try
+                    {
+                    await GenerateAndWriteReportAsync (cancellationToken);
+                    }
+                catch ( OperationCanceledException )
+                    {
+                    logger.Info ("[Power Position Reporter] Stopped │ cancellation requested");
+                    break;
+                    }
+                catch ( Exception ex )
+                    {
+                    logger.Error (
+                        "[Power Position Reporter] Scheduling loop failed unexpectedly │ restarting timer", ex);
+                    }
 
                 using var timer = new PeriodicTimer(_interval);
                 LogNextRun ();
@@ -83,35 +97,35 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 {
                 // Expected, retryable failure: the resilience pipeline already exhausted its
                 // retries for this run. Log as a warning and let the next scheduled tick try again.
-                _consecutiveFailures++;
                 logger.Warning (
-                    $"[Power Trade Positions] Trade(s) Extraction FAILED (consecutive={_consecutiveFailures}) │ power service unavailable │ reason={ex.Message}");
-                EscalateIfRepeatedFailure ();
+                    $"[Power Trade Positions] Trade(s) Extraction FAILED (consecutive={_consecutiveFailures + 1}) │ power service unavailable │ reason={ex.Message}");
+                RecordFailure ();
                 }
             catch ( ReportWriteException ex )
                 {
                 // Expected, retryable failure: report could not be written this run (disk/permissions).
-                _consecutiveFailures++;
-                logger.Error ($"[Power Trade Positions] Report write FAILED (consecutive={_consecutiveFailures})", ex);
-                EscalateIfRepeatedFailure ();
+                logger.Error ($"[Power Trade Positions] Report write FAILED (consecutive={_consecutiveFailures + 1})", ex);
+                RecordFailure ();
                 }
             catch ( Exception ex )
                 {
                 // Unexpected, unclassified failure. Logged at Fatal so it is clearly distinguishable
                 // from the expected/retryable failures above (e.g. config errors, bugs, OOM).
-                _consecutiveFailures++;
                 logger.Fatal (
-                    $"[Power Trade Positions] Trade(s) Extraction FAILED unexpectedly (consecutive={_consecutiveFailures})", ex);
-                EscalateIfRepeatedFailure ();
+                    $"[Power Trade Positions] Trade(s) Extraction FAILED unexpectedly (consecutive={_consecutiveFailures + 1})", ex);
+                RecordFailure ();
                 }
             }
 
         /// <summary>
-        /// Raises visibility once failures repeat across several consecutive scheduled runs,
-        /// so a systemic problem isn't silently retried forever without anyone noticing.
+        /// Records a failed report run and raises visibility once failures repeat across several
+        /// consecutive scheduled runs, so a systemic problem isn't silently retried forever without
+        /// anyone noticing.
         /// </summary>
-        private void EscalateIfRepeatedFailure ( )
+        private void RecordFailure ( )
             {
+            _consecutiveFailures++;
+
             if ( _consecutiveFailures >= ConsecutiveFailureAlertThreshold )
                 {
                 logger.Fatal (
