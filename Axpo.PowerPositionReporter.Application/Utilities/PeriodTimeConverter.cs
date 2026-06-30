@@ -8,10 +8,12 @@
             {
             try
                 {
+                // IANA id, works on Linux/macOS and modern Windows (ICU-enabled).
                 return TimeZoneInfo.FindSystemTimeZoneById ("Europe/Berlin");
                 }
             catch ( TimeZoneNotFoundException )
                 {
+                // Fallback for older Windows systems using Windows time zone ids.
                 return TimeZoneInfo.FindSystemTimeZoneById ("W. Europe Standard Time");
                 }
             }
@@ -21,9 +23,8 @@
             var berlinLocalStart = new DateTime(tradeDate.Year, tradeDate.Month, tradeDate.Day, 0, 0, 0, DateTimeKind.Unspecified)
                 .AddHours(period - 1);
 
-            var utc = TimeZoneInfo.ConvertTimeToUtc(berlinLocalStart, BerlinTimeZone);
-
-            return DateTime.SpecifyKind (utc, DateTimeKind.Utc);
+            // ConvertTimeToUtc already returns a DateTime with Kind = Utc, so no extra SpecifyKind call is needed.
+            return TimeZoneInfo.ConvertTimeToUtc (berlinLocalStart, BerlinTimeZone);
             }
         }
     }

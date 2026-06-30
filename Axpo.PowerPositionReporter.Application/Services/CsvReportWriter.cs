@@ -53,7 +53,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
                     var utcDateTime = PeriodTimeConverter.ToUtc (result.Date, position.Key);
                     var datetime    = utcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", _invariant);
                     var volume      = position.Value.ToString("G", _invariant);
-                    sb.Append (datetime).Append (',').AppendLine (volume);
+                    sb.Append (datetime).Append (';').AppendLine (volume);
                     }
 
                 await File.WriteAllTextAsync (tempPath, sb.ToString (), Encoding.UTF8, cancellationToken);

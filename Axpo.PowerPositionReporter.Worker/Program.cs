@@ -22,8 +22,8 @@ var host = Host.CreateDefaultBuilder(args)
             .AddEnvironmentVariables()
             .AddCommandLine(args, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                ["--output-path"] = "PowerPositionReporter:OutputPath",
-                ["-o"]            = "PowerPositionReporter:OutputPath",
+                ["--csv-report-path"] = "PowerPositionReporter:CsvReportPath",
+                ["-csv"]            = "PowerPositionReporter:CsvReportPath",
                 ["--interval"]    = "PowerPositionReporter:IntervalMinutes",
                 ["-i"]            = "PowerPositionReporter:IntervalMinutes",
                 });
