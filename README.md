@@ -32,13 +32,6 @@
 
 On a configurable interval — **immediate first run**, then every `IntervalMinutes` — the service:
 
-```mermaid
-flowchart LR
-    A["1. Fetch trades<br/><sub>PowerService, with retries</sub>"] --> B["2. Aggregate<br/><sub>volumes by hourly period</sub>"]
-    B --> C["3. Convert to UTC<br/><sub>build report filename</sub>"]
-    C --> D["4. Write CSV<br/><sub>atomic write, then logged</sub>"]
-```
-
 1. **Fetch** — requests all trades for the next calendar day (UTC) from the external `PowerService`
    trading system, wrapped in a Polly retry pipeline with exponential backoff.
 2. **Aggregate** — sums and rounds trade volumes into a single value per hourly period.
