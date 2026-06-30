@@ -189,9 +189,18 @@ dotnet run --project Axpo.PowerPositionReporter.Worker -- -csv ./out -i 10
 ```
 
 ---
+👤 Author
+
+Karn — Senior .NET Full-Stack / Cloud Engineer
+
+
+Designed and built the full solution: Clean Architecture layering (Domain → Application →
+Worker), Polly-based resilience for the trading-system integration, atomic CSV report writing,
+Serilog structured logging, and the unit + Reqnroll BDD test suites.
+💼 LinkedIn · 🐙 GitHub
 
 <div align="center">
 
-Made with ⚡ for day-ahead power position reporting.
+Made with ⚡ by Karn for day-ahead power position reporting.
 
 </div>
