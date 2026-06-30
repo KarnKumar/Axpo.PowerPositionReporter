@@ -1,7 +1,7 @@
 ﻿using Axpo.PowerPositionReporter.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace Axpo.PowerPositionReporter.Application.Extensions
+namespace Axpo.PowerPositionReporter.Application.Services
     {
     public sealed class SerilogReportLogger ( ILogger<SerilogReportLogger> logger ) : IReportLogger
         {
