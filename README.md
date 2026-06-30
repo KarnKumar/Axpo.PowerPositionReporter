@@ -32,12 +32,11 @@
 
 On a configurable interval — **immediate first run**, then every `IntervalMinutes` — the service:
 
-```
- ┌──────────────────┐     ┌────────────────┐     ┌───────────────────┐     ┌───────────────┐
- │ 1. Fetch trades   │ ──▶ │ 2. Aggregate    │ ──▶ │ 3. Convert to UTC  │ ──▶ │ 4. Write CSV   │
- │ (PowerService,    │     │ volumes by      │     │ & build report     │     │ (atomic write, │
- │  with retries)    │     │ hourly period   │     │ filename            │     │  then logged)  │
- └──────────────────┘     └────────────────┘     └───────────────────┘     └───────────────┘
+```mermaid
+flowchart LR
+    A["1. Fetch trades<br/><sub>PowerService, with retries</sub>"] --> B["2. Aggregate<br/><sub>volumes by hourly period</sub>"]
+    B --> C["3. Convert to UTC<br/><sub>build report filename</sub>"]
+    C --> D["4. Write CSV<br/><sub>atomic write, then logged</sub>"]
 ```
 
 1. **Fetch** — requests all trades for the next calendar day (UTC) from the external `PowerService`
