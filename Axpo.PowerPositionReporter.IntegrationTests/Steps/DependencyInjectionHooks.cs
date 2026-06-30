@@ -31,7 +31,7 @@ namespace Axpo.PowerPositionReporter.BddTests.Support
             var csvReportPath = Path.Combine(Path.GetTempPath(), $"axpo-bdd-{Guid.NewGuid():N}");
 
             var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.BddTests.json", optional: false)
+                .AddJsonFile("appsettings.IntegrationTests.json", optional: false)
                 .AddInMemoryCollection(new Dictionary<string, string?>
                     {
                     ["PowerPositionReporter:CsvReportPath"] = csvReportPath
