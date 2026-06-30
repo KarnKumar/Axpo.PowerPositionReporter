@@ -4,5 +4,8 @@
     <Project Path="Axpo.PowerPositionReporter.Domain/Axpo.PowerPositionReporter.Domain.csproj" />
     <Project Path="Axpo.PowerPositionReporter.Worker/Axpo.PowerPositionReporter.Worker.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="Axpo.PowerPositionReporter.IntegrationTests/Axpo.PowerPositionReporter.IntegrationTests.csproj" />
+    <Project Path="Axpo.PowerPositionReporter.UnitTests/Axpo.PowerPositionReporter.UnitTests.csproj" />
+  </Folder>
 </Solution>

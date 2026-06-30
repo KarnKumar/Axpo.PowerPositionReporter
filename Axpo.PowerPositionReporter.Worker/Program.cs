@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 using Axpo.PowerPositionReporter.Application.Configurations;
@@ -40,8 +41,10 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddPowerTradeResilience(context.Configuration);
 
         services.AddSingleton<IReportLogger, SerilogReportLogger>();
-        services.AddScoped<IPowerPositionReportService, PowerPositionReportService>();
-        services.AddScoped<IPowerTradeService, PowerTradeService>();
+
+        services.AddSingleton<IPowerPositionReportService, PowerPositionReportService>();
+        services.AddSingleton<IPowerTradeService, PowerTradeService>();
+
         services.AddSingleton<IPowerService, PowerService>();
         services.AddSingleton<IReportWriter, CsvReportWriter>();
         services.AddHostedService<PowerPositionReportWorker>();

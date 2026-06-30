@@ -47,7 +47,7 @@ namespace Axpo.PowerPositionReporter.Application.Services
                 Directory.CreateDirectory (directory);
 
                 var sb = new StringBuilder();
-                sb.AppendLine ("Datetime,Volume");
+                sb.AppendLine ("Datetime;Volume");
 
                 foreach ( var position in result.AggregatedPositions.OrderBy (p => p.Key) )
                     {
